@@ -127,6 +127,7 @@ class MailmanFilter extends AbstractGMailFilter {
       ' AND NOT from:gitlab@gitlab.eclipse.org' +
       ' AND NOT from:gerrit@eclipse.org' +
       ' AND NOT from:gerrit@foundation.eclipse.org' +
+      ' AND NOT from:hudson@eclipse.org' +
       ' AND NOT from:webmaster@eclipse.org' +
       ' AND NOT from:sabot@*' +
       ' AND NOT in:Sent' +
