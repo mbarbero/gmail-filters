@@ -376,5 +376,5 @@ function main() {
   new GitHubFilter().run();
   new GitLabFilter().run(); 
   new BugzillaFilter().run();
-  new MailmanFilter(32).run();
+  new MailmanFilter().run();
 }
