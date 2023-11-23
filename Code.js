@@ -131,6 +131,7 @@ class MailmanFilter extends AbstractGMailFilter {
       ' AND NOT from:webmaster@eclipse.org' +
       ' AND NOT from:sabot@*' +
       ' AND NOT in:Sent' +
+      ' AND after:2019/01/01 ' +
       ' AND has:nouserlabels', searchMax);
   }
 
