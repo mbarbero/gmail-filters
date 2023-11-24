@@ -39,7 +39,7 @@ class AbstractGMailFilter {
    */
   _uniqLabels(labels) {
     return labels.filter((current, index, self) =>
-        current && self.findIndex(label => label.getName() === current.getName()) === index
+        current && self.findIndex(label => label && label.getName() === current.getName()) === index
     );
   }
 
