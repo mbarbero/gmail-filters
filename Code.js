@@ -44,25 +44,63 @@ class AbstractGMailFilter {
   }
 
   /**
-   * Takes a string and returns a Gmail label. If the label does not exist, it is created.
-   * @param {string} labelStr - The name of the label to get or create.
-   * @returns {GmailLabel} - The existing or newly created label.
-   * @private
+   * Creates a new label in Gmail with the given name.
+   *
+   * @param {string} labelStr - The name of the label to be created.
+   * @returns {Label} The newly created label.
+   * @throws {Error} If there is an error while creating the label.
+   */
+  createLabel(labelStr) {
+    try {
+      return GmailApp.createLabel(labelStr);
+    } catch (e) {
+      console.error(`Error while creating label "${labelStr}"`, e);
+      throw e;
+    }
+  }
+
+  /**
+   * Gets a Gmail label with the given name.
+   * @param {string} labelStr - The name of the label to get.
+   * @returns {Label|null} The label with the given name, or null if the label does not exist.
+   */
+  getLabel(labelStr) {
+    return AbstractGMailFilter.USER_LABELS.find(label => label.getName() === labelStr);
+  }
+
+  /**
+   * Retrieves an existing label or creates a new one if it doesn't exist.
+   *
+   * The method first sanitizes the input string by replacing any parentheses with underscores.
+   *
+   * @param {string} labelStr - The name of the label to be retrieved or created.
+   * @returns {Label} The existing or newly created label.
    */
   _getOrCreateLabel(labelStr) {
     const sanitizedLabelStr = labelStr.replace(/\(|\)/g, "_");
-    let label = GmailApp.getUserLabelByName(sanitizedLabelStr);
+    let label = this.getLabel(sanitizedLabelStr);
+
     if (!label) {
-      try {
-        label = GmailApp.createLabel(sanitizedLabelStr);
-      } catch (e) {
-        console.error(`Error while creating label "${sanitizedLabelStr}"`, e);
-        throw e;
+      // a/b-c is semantically equal to a/b/c, so we try to find a/b/c if a/b-c does not exist
+      // otherwise, creating a/b-c would fail if a/b/c already exists
+      const semanticalyEqualSanitizedLabelStr = sanitizedLabelStr.replace(/-/g, "/");
+      label = this.getLabel(semanticalyEqualSanitizedLabelStr);
+
+      if (!label) {
+        label = this.createLabel(sanitizedLabelStr);
+      } else {
+        const altSanitizedLabelStr = sanitizedLabelStr.replace(/-/g, "_");
+        label = this.getLabel(altSanitizedLabelStr);
+
+        if (!label) {
+          label = this.createLabel(altSanitizedLabelStr);
+        }
       }
     }
+
     return label;
   }
-  
+
   /**
    * Takes a string representing a hierarchy of labels (separated by "/") and returns a Gmail label. 
    * If any labels in the hierarchy do not exist, they are created.
@@ -74,11 +112,11 @@ class AbstractGMailFilter {
   _getOrCreateLabelHierarchy(labelName, separator = "/") {
     const labels = labelName.split(separator);
     return labels.reduce((currentLabel, label) => {
-        if (currentLabel) {
-            return this._getOrCreateLabel(`${currentLabel.getName()}/${label}`);
-        } else {
-            return this._getOrCreateLabel(label);
-        }
+      if (currentLabel) {
+        return this._getOrCreateLabel(`${currentLabel.getName()}/${label}`);
+      } else {
+        return this._getOrCreateLabel(label);
+      }
     }, null);
   }
 
@@ -112,6 +150,7 @@ class AbstractGMailFilter {
     });
   }
 }
+AbstractGMailFilter.USER_LABELS=GmailApp.getUserLabels();
 
 /**
  * MailmanFilter is a class that extends AbstractGMailFilter for creating Gmail filters specifically for mailing lists.
